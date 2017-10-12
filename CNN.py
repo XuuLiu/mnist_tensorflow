@@ -17,7 +17,8 @@ stddev=0.1
 weights={ # h,w,d,n
     'wc1':tf.Variable(tf.random_normal([3,3,1,64],stddev=stddev)),
     'wc2':tf.Variable(tf.random_normal([3,3,64,128],stddev=stddev)),
-    'wd1': tf.Variable(tf.random_normal([7*7*128,1024], stddev=stddev)), #7*7*128图像大小，第一个全连接层
+    'wd1': tf.Variable(tf.random_normal([7*7*128,1024], stddev=stddev)), 
+    #the input of the 1st of full connected layer is a image of 7*7*128图像大小，第一个全连接层
     'wd2':tf.Variable(tf.random_normal([1024,n_output],stddev=stddev))
 }
 biases={
@@ -29,7 +30,7 @@ biases={
 
 # 前向传播骨架
 def conv_basic(_input,_w,_b,_keepratio):
-    _input_r=tf.reshape(_input,shape=[-1,28,28,1]) #-1是说让他自动推断
+    _input_r=tf.reshape(_input,shape=[-1,28,28,1]) #-1是说让他自动推断 is let it calculate this dimension itself
 
     #conv layer1
     _conv1=tf.nn.conv2d(_input_r,_w['wc1'],strides=[1,1,1,1],padding='SAME')
