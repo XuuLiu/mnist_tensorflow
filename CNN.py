@@ -17,8 +17,7 @@ stddev=0.1
 weights={ # h,w,d,n
     'wc1':tf.Variable(tf.random_normal([3,3,1,64],stddev=stddev)),
     'wc2':tf.Variable(tf.random_normal([3,3,64,128],stddev=stddev)),
-    'wd1': tf.Variable(tf.random_normal([7*7*128,1024], stddev=stddev)), 
-    #the input of the 1st of full connected layer is a image of 7*7*128图像大小，第一个全连接层
+    'wd1': tf.Variable(tf.random_normal([7*7*128,1024], stddev=stddev)), #7*7*128图像大小，第一个全连接层
     'wd2':tf.Variable(tf.random_normal([1024,n_output],stddev=stddev))
 }
 biases={
@@ -30,7 +29,7 @@ biases={
 
 # 前向传播骨架
 def conv_basic(_input,_w,_b,_keepratio):
-    _input_r=tf.reshape(_input,shape=[-1,28,28,1]) #-1是说让他自动推断 is let it calculate this dimension itself
+    _input_r=tf.reshape(_input,shape=[-1,28,28,1]) #-1是说让他自动推断
 
     #conv layer1
     _conv1=tf.nn.conv2d(_input_r,_w['wc1'],strides=[1,1,1,1],padding='SAME')
@@ -83,7 +82,14 @@ _corr=tf.equal(tf.arg_max(_pred,1),tf.arg_max(y,1))
 accr=tf.reduce_mean(tf.cast(_corr,tf.float32))
 init=tf.initialize_all_variables()
 
+#保存
+save_step=1
+saver=tf.train.Saver(max_to_keep=3)
+
+
+
 #迭代
+do_train=1 #1时训练，0时测试
 sess=tf.Session()
 sess.run(init)
 
@@ -91,30 +97,38 @@ training_epochs=50
 batch_size=64
 display_step=5
 
-for epoch in range(training_epochs):
-    avg_cost=0.
-    #total_batch=int(mnist.train.num_examples/batch_size) #这个是对的，但是电脑不行就整个简单的跑跑看
-    total_batch=10 #这个是不对的，都没有遍历完，缺失信息
+if do_train==1:
+    for epoch in range(training_epochs):
+        avg_cost=0.
+        #total_batch=int(mnist.train.num_examples/batch_size) #这个是对的，但是电脑不行就整个简单的跑跑看
+        total_batch=10 #这个是不对的，都没有遍历完，缺失信息
 
-    for i in range(total_batch):
-        batch_xs,batch_ys=mnist.train.next_batch(batch_size)
-        sess.run(optm,feed_dict={x:batch_xs,y:batch_ys,keepratio:0.6})
-        avg_cost+=sess.run(cost,feed_dict={x:batch_xs,y:batch_ys,keepratio:1.})/total_batch
+        for i in range(total_batch):
+            batch_xs,batch_ys=mnist.train.next_batch(batch_size)
+            sess.run(optm,feed_dict={x:batch_xs,y:batch_ys,keepratio:0.6})
+            avg_cost+=sess.run(cost,feed_dict={x:batch_xs,y:batch_ys,keepratio:1.})/total_batch
 
-    if epoch % display_step==0:
-        print "Epoch:%03d/%03d cost:%.9f" %(epoch,training_epochs,avg_cost)
-        train_acc=sess.run(accr,feed_dict={x:batch_xs,y:batch_ys,keepratio:1.})
-        print "training accuracy: %.3f" %train_acc
-        test_acc=sess.run(accr,feed_dict={x:testimg,y:testlabel,keepratio:1.})
-        print "test accuracy: %.3f" %test_acc
+        if epoch % display_step==0:
+            print "Epoch:%03d/%03d cost:%.9f" %(epoch,training_epochs,avg_cost)
+            train_acc=sess.run(accr,feed_dict={x:batch_xs,y:batch_ys,keepratio:1.})
+            print "training accuracy: %.3f" %train_acc
+            test_acc=sess.run(accr,feed_dict={x:testimg,y:testlabel,keepratio:1.})
+            print "test accuracy: %.3f" %test_acc
+
+        if epoch%save_step==0:
+            saver.save(sess,"save/nets/cnn_mnist_basic_%s.ckpt"%str(epoch))
+
+if do_train==0:
+    epoch=training_epochs-1
+    saver.restore(sess,"save/nets/cnn_mnist_basic_%s.ckpt"&str(epoch))
+
+    test_acc=sess.run(accr,feed_dict={x:testimg,y:testlabel,keepratio:1.})
+    print ("test accuracy:%3f"%(test_acc))
 
 
 
-
-
-
-
-
+    #3. Try a simple CNN (with 2 conv, 2 pooling and 2 full connection layers):
+     #   Epoch:045/050 cost:0.079185180 training accuracy: 0.953 test accuracy: 0.971
 
 
 
