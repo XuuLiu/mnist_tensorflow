@@ -34,8 +34,6 @@ def gen_captcha_text_and_image():
 def convert2gray(img):
     if len(img.shape) > 2:
         gray = np.mean(img, -1)
-        # r, g, b = img[:,:,0], img[:,:,1], img[:,:,2]
-        # gray = 0.2989 * r + 0.5870 * g + 0.1140 * b
         return gray
     else:
         return img
@@ -46,20 +44,6 @@ def text2vec(text):
         raise ValueError('Max length 4')
 
     vector = np.zeros(MAX_CAPTCHA * CHAR_SET_LEN)
-    """
-    def char2pos(c):  
-        if c =='_':  
-            k = 62  
-            return k  
-        k = ord(c)-48  
-        if k > 9:  
-            k = ord(c) - 55  
-            if k > 35:  
-                k = ord(c) - 61  
-                if k > 61:  
-                    raise ValueError('No Map')   
-        return k  
-    """
     for i, c in enumerate(text):
         idx = i * CHAR_SET_LEN + int(c)
         vector[idx] = 1
@@ -67,24 +51,6 @@ def text2vec(text):
 
 
 def vec2text(vec):
-    """
-    char_pos = vec.nonzero()[0]  
-    text=[]  
-    for i, c in enumerate(char_pos):  
-        char_at_pos = i #c/63  
-        char_idx = c % CHAR_SET_LEN  
-        if char_idx < 10:  
-            char_code = char_idx + ord('0')  
-        elif char_idx <36:  
-            char_code = char_idx - 10 + ord('A')  
-        elif char_idx < 62:  
-            char_code = char_idx-  36 + ord('a')  
-        elif char_idx == 62:  
-            char_code = ord('_')  
-        else:  
-            raise ValueError('error')  
-        text.append(chr(char_code)) 
-    """
     text = []
     char_pos = vec.nonzero()[0]
     for i, c in enumerate(char_pos):
@@ -186,7 +152,7 @@ def crack_captcha(captcha_image):
 
     saver=tf.train.Saver()
     with tf.Session() as sess:
-        saver.restore(sess,"./model/crack_capcha.model-810")
+        saver.restore(sess,"./model/crack_capcha.model-810") # read the model that you saved while training
 
         predict=tf.argmax(tf.reshape(output,[-1,MAX_CAPTCHA,CHAR_SET_LEN]),2)
         text_list=sess.run(predict,feed_dict={X:[captcha_image],keep_prob:1})
@@ -195,7 +161,7 @@ def crack_captcha(captcha_image):
 
 
 if __name__=='__main__':
-    train=1
+    train=0 # 0 is for training and 1 is for test, change it by yourself.
     if train==0:
         number = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
 
