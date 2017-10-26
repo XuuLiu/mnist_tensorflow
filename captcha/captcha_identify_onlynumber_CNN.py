@@ -41,25 +41,25 @@ def convert2gray(img):
 def text2vec(text):
     text_len = len(text)
     if text_len > MAX_CAPTCHA:
-        raise ValueError('Max length 4')
+        raise ValueError('Max length is %d' %(MAX_CAPTCHA))
 
     vector = np.zeros(MAX_CAPTCHA * CHAR_SET_LEN)
     for i, c in enumerate(text):
-        idx = i * CHAR_SET_LEN + int(c)
+        idx = i * CHAR_SET_LEN + int(c) # find the place where is 1
         vector[idx] = 1
     return vector
 
 
 def vec2text(vec):
     text = []
-    char_pos = vec.nonzero()[0]
+    char_pos = vec.nonzero()[0] #location of where is 1
     for i, c in enumerate(char_pos):
         number = i % 10
         text.append(str(number))
 
     return "".join(text)
 
-
+# create the  frame of cnn
 def crack_captcha_cnn(w_alpha=0.01,b_alpha=0.1): # initialize w and b with a small number
     x=tf.reshape(X,shape=[-1,IMAGE_HEIGHT,IMAGE_WIDTH,1]) #[batch_size,length,width,channel]
 
@@ -83,7 +83,7 @@ def crack_captcha_cnn(w_alpha=0.01,b_alpha=0.1): # initialize w and b with a sma
     conv2=tf.nn.dropout(conv3,keep_prob=keep_prob)
 
     # full connected layer
-    w_d=tf.Variable(w_alpha*tf.random_normal([8*20*64,1024]))
+    w_d=tf.Variable(w_alpha*tf.random_normal([8*20*64,1024])) #8*20 is calculated thought all those conv and poolings
     b_d=tf.Variable(b_alpha*tf.random_normal([1024]))
     dense=tf.reshape(conv3,[-1,w_d.get_shape().as_list()[0]]) # to value of [8*20*64,1024]
     dense=tf.nn.relu(tf.add(tf.matmul(dense,w_d),b_d))
@@ -109,8 +109,8 @@ def get_next_batch(batch_size=128):
         text,image=wrap_gen_captcha_text_and_image()
         image =convert2gray(image)
 
-        batch_x[i,:]=image.flatten()
-        batch_y[i,:]=text2vec(text)
+        batch_x[i,:]=image.flatten() # make it to 1 dimension
+        batch_y[i,:]=text2vec(text) # to one_hot encoding
 
     return batch_x,batch_y
 
@@ -133,7 +133,7 @@ def train_crack_captcha_cnn():
         step=0
         while True:
             batch_x,batch_y=get_next_batch(64)
-            _,loss_=sess.run([optimizer,loss],feed_dict={X:batch_x,Y:batch_y,keep_prob:0.75})
+            _,loss_=sess.run([optimizer,loss],feed_dict={X:batch_x,Y:batch_y,keep_prob:0.75}) # keep_prob for  dropout layer
             print step, loss_
 
             if step %100==0:
@@ -171,8 +171,8 @@ if __name__=='__main__':
         IMAGE_WIDTH=160
         MAX_CAPTCHA=len(text)
 
-        chat_set=number
-        CHAR_SET_LEN=len(chat_set)
+        chat_set=number # choice number of one position
+        CHAR_SET_LEN=len(chat_set) # total position
 
         X=tf.placeholder(tf.float32,[None,IMAGE_HEIGHT*IMAGE_WIDTH]) #use gray pics
         Y=tf.placeholder(tf.float32,[None,MAX_CAPTCHA*CHAR_SET_LEN]) #lenth of label
