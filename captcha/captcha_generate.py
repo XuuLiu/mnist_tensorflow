@@ -1,4 +1,3 @@
-import tensorflow as tf
 from captcha.image import ImageCaptcha
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,12 +20,12 @@ def gen_captcha_text_and_image():
     image=ImageCaptcha()
 
     captcha_text=random_captcha_text()
-    captcha_text=''.join(captcha_text) # list to string
+    captcha_text=''.join(captcha_text) # list to string, because the ImageCaptcha.generate function recieve string
 
     captcha=image.generate(captcha_text)
 
     captcha_image=Image.open(captcha)
-    captcha_image=np.array(captcha_image)
+    captcha_image=np.array(captcha_image) # convert image to array
     return captcha_text, captcha_image
 
 if __name__=='__main__':
